@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura de Criaturas</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-color: #16213e;
+            --accent-color: #e94560;
+            --text-color: #ffffff;
+            --success-color: #4ecca3;
+            --danger-color: #ff4d4d;
+            --xp-color: #00ff0d;
+            --base-font-size: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: var(--base-font-size);
+        }
+
+        #main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            gap: 20px;
+        }
+
+        #main-menu h1 {
+            font-size: 4rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            margin-bottom: 40px;
+        }
+
+        .menu-btn {
+            width: 250px;
+            font-size: 1.2rem;
+            padding: 15px;
+            letter-spacing: 2px;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+            padding-bottom: 100px;
+            display: none;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Exploration Grid */
+        #exploration-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card {
+            aspect-ratio: 2/3;
+            background-color: var(--card-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        .card.revealed {
+            cursor: default;
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #16213e, #0f3460);
+        }
+
+        .card-front {
+            background: #ffffff;
+            color: #000;
+            transform: rotateY(180deg);
+            flex-direction: column;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Battle UI */
+        #battle-screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .battle-arena {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 200px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .fighter {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .enemy-fighter {
+            flex: 0 1 150px;
+        }
+
+        .fighter-emoji {
+            font-size: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            height: 150px;
+        }
+
+        .fighter-emoji img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .creature-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 5px;
+        }
+
+        .team-img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .hp-bar-container, .xp-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #444;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .enemy-hp-container {
+            height: 8px;
+            margin: 2px 0;
+        }
+
+        .hp-bar-fill { height: 100%; background: var(--success-color); width: 100%; transition: width 0.3s ease; }
+        .xp-bar-fill { height: 100%; background: var(--xp-color); width: 0%; transition: width 0.3s ease; }
+
+        .battle-logs {
+            height: 120px;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+        }
+
+        .battle-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: filter 0.2s;
+        }
+
+        button:hover { filter: brightness(1.2); }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+
+        /* Tooltip style */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 180px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -90px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            border: 1px solid var(--accent-color);
+            pointer-events: none;
+            white-space: pre-line;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Overlay & Selection */
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .selection-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .creature-card {
+            background: var(--card-color);
+            border: 2px solid var(--accent-color);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            width: 130px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .creature-card:hover { transform: scale(1.05); background: #1f2b4e; }
+        .creature-card.selected { border-color: white; box-shadow: 0 0 10px white; }
+        .creature-card.dead { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+        /* Team Footer */
+        #team-footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 2px solid var(--accent-color);
+            z-index: 50;
+        }
+
+        .team-member {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: help;
+        }
+
+        .team-member .mini-bars {
+            width: 40px;
+            margin-top: 4px;
+        }
+
+        .mini-bar {
+            height: 4px;
+            background: #444;
+            margin-bottom: 2px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill-hp { height: 100%; background: var(--success-color); }
+        .mini-bar-fill-xp { height: 100%; background: var(--xp-color); }
+
+        .hidden { display: none !important; }
+
+        .modal {
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 95%;
+            text-align: center;
+            border: 2px solid var(--accent-color);
+            position: relative;
+        }
+
+        .shop-diamonds {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-weight: bold;
+            color: #00d2ff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="main-menu">
+    <h1>Aventura</h1>
+    <button class="menu-btn" onclick="startNewGame()">NOVO JOGO</button>
+    <button class="menu-btn" id="continue-btn" disabled onclick="continueGame()">CONTINUAR</button>
+    <button class="menu-btn" onclick="showOptionsMenu()">OPÇÕES</button>
+    <button class="menu-btn" onclick="window.close()">SAIR</button>
+</div>
+
+<div id="game-container">
+    <header>
+        <h1>Aventura de Cartas</h1>
+    </header>
+
+    <div class="stats-bar">
+        <span>Nível: <span id="current-level">1</span>/50</span>
+        <span>Time: <span id="creature-count">0</span>/6</span>
+        <span>Diamantes: <span id="player-diamantes">10</span> 💎</span>
+    </div>
+
+    <div id="exploration-grid"></div>
+
+    <div id="battle-screen">
+        <div class="battle-arena">
+            <div class="fighter" id="player-fighter">
+                <span class="fighter-emoji">🛡️</span>
+                <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar-fill"></div></div>
+                <div id="player-hp-text">100/100</div>
+                <div class="xp-bar-container"><div id="player-xp-bar" class="xp-bar-fill"></div></div>
+                <div id="player-xp-text">Lvl 1 - 0/100 XP</div>
+                <strong id="player-name">Jogador</strong>
+            </div>
+            <div style="font-size: 2rem;">VS</div>
+            <div id="enemies-container" style="display: flex; gap: 10px; flex: 2; justify-content: center; flex-wrap: wrap;">
+                <!-- Inimigos serão inseridos aqui -->
+            </div>
+        </div>
+        <div class="battle-logs" id="battle-logs"></div>
+        <div class="battle-actions" id="battle-actions"></div>
+    </div>
+</div>
+
+<div id="overlay">
+    <div class="modal" id="modal-content">
+        <div id="modal-diamonds-hud" class="shop-diamonds hidden">💎 <span id="modal-diamonds-val">0</span></div>
+        <h2 id="modal-title">Título</h2>
+        <div id="modal-body">Conteúdo aqui</div>
+        <div id="modal-footer" class="selection-grid"></div>
+        <div id="modal-actions" style="margin-top: 20px;"></div>
+    </div>
+</div>
+
+<div id="team-footer"></div>
+
+<script>
+    // --- Data Definitions ---
+    const CREATURE_POOL = [
+        { id: 'dragao', name: "Dragãozinho", emoji: "🦖", image: "dragao.png", hp: 120, attacks: [{name: "Sopro de Fogo", min: 15, max: 25}, {name: "Mordida", min: 10, max: 15}], evo: { level: 5, name: "Rei Dragão", emoji: "🐉", image: "rei_dragao.png", hpBoost: 50, dmgBoost: 10 } }, 
+        { id: 'fenix', name: "Fênix", emoji: "🐦‍🔥", image: "fenix.png", hp: 100, attacks: [{name: "Brasas", min: 12, max: 20}, {name: "Picada Solar", min: 8, max: 30}], evo: { level: 5, name: "Fênix Ancestral", emoji: "🦅", image: "fenix_ancestral.png", hpBoost: 40, dmgBoost: 15 } },
+        { id: 'golem', name: "Golem", emoji: "🗿", image: "golem.png", hp: 150, attacks: [{name: "Soco de Pedra", min: 10, max: 20}, {name: "Esmagar", min: 18, max: 22}], evo: { level: 5, name: "Golem de Ferro", emoji: "🤖", image: "golem_ferro.png", hpBoost: 80, dmgBoost: 8 } },
+        { id: 'unicornio', name: "Unicórnio", emoji: "🦄", image: "unicornio.png", hp: 90, attacks: [{name: "Raio Místico", min: 20, max: 25}, {name: "Investida", min: 10, max: 15}], evo: { level: 5, name: "Alicórnio", emoji: "🫎", image: "alicornio.png", hpBoost: 45, dmgBoost: 12 } },
+        { id: 'lobo', name: "Lobo", emoji: "🐺", image: "lobo.png", hp: 80, attacks: [{name: "Uivo Mortal", min: 5, max: 35}, {name: "Arranhão", min: 12, max: 18}], evo: { level: 5, name: "Lobisomem", emoji: "🐺", image: "lobisomem.png", hpBoost: 50, dmgBoost: 20 } },
+        { id: 'tartaruga', name: "Tartaruga", emoji: "🐢", image: "tartaruga.png", hp: 200, attacks: [{name: "Casco Pesado", min: 5, max: 15}, {name: "Jato d'água", min: 10, max: 20}], evo: { level: 5, name: "Tartaruga Gigante", emoji: "🐢", image: "tartaruga_gigante.png", hpBoost: 100, dmgBoost: 5 } },
+        { id: 'goblin', name: "Goblin", emoji: "🧌", image: "goblin.png", hp: 105, attacks: [{name: "Salto Gelatinoso", min: 10, max: 12}, {name: "Ácido", min: 15, max: 18}], evo: { level: 8, name: "Goblin Supremo", emoji: "🧌", image: "goblin_supremo.png", hpBoost: 100, dmgBoost: 50 } },
+        { id: 'morcego', name: "Morcego", emoji: "🦇", image: "morcego.png", hp: 70, attacks: [{name: "Sugada", min: 8, max: 12}, {name: "Eco-ataque", min: 12, max: 22}], evo: { level: 5, name: "Vampiro", emoji: "🧛", image: "vampiro.png", hpBoost: 50, dmgBoost: 18 } },
+        { id: 'zumbi', name: "zumbi", emoji: "🧟", image: "zumbi.png", hp: 85, attacks: [{name: "Mordida", min: 10, max: 20}, {name: "Desmembramento", min: 14, max: 18}], evo: { level: 5, name: "Zumbi Forte", emoji: "🧟‍♂️", image: "zumbi_forte.png", hpBoost: 45, dmgBoost: 14 } },
+        { id: 'polvo', name: "Polvo", emoji: "🐙", image: "polvo.png", hp: 110, attacks: [{name: "Onda de Choque", min: 12, max: 22}, {name: "Tsunami", min: 18, max: 28}], evo: { level: 5, name: "Leviatã", emoji: "🦑", image: "leviata.png", hpBoost: 60, dmgBoost: 12 } },
+        { id: 'fada', name: "Fada", emoji: "🧚‍♀️", image: "fada.png", hp: 75, attacks: [{name: "Pó de Estrela", min: 15, max: 25}, {name: "Cura Ofensiva", min: 10, max: 20}], evo: { level: 5, name: "Rainha Fada", emoji: "👸", image: "rainha_fada.png", hpBoost: 40, dmgBoost: 20 } },
+        { id: 'esquilo', name: "Esquilo", emoji: "🐿️", image: "esquilo.png", hp: 65, attacks: [{name: "Noz Explosiva", min: 20, max: 22}, {name: "Mordida Rápida", min: 8, max: 12}], evo: { level: 5, name: "Esquilo Guerreiro", emoji: "🛡️", image: "esquilo_guerreiro.png", hpBoost: 45, dmgBoost: 15 } },
+        { id: 'mago', name: "Mago", emoji: "🧙‍♀️", image: "mago.png", hp: 95, attacks: [{name: "Faisca Poderosa", min: 0, max: 30}, {name: "Chuva de Pedras", min: 0, max: 100}], evo: { level: 5, name: "Rei Mago", emoji: "🧙‍♂️", image: "rei_mago.png", hpBoost: 100, dmgBoost: 70 } }
+    ];
+
+    const BOSS = { name: "REI DEMÔNIO", emoji: "👺", image: "boss.png", hp: 800, attacks: [{name: "Apocalipse", min: 0, max: 1000}, {name: "Garras do Caos", min: 30, max: 50}, {name: "Chama Negra", min: 35, max: 45}] }; 
+
+    // --- Game State ---
+    let state = {
+        level: 1,
+        team: [],
+        maxTeamSize: 6,
+        cardsRevealed: 0,
+        enemies: [], // Agora suporta múltiplos inimigos
+        activePlayerCreature: null,
+        isBossBattle: false,
+        selectedIniciais: [],
+        diamantes: 10,
+        options: {
+            fontSize: 16,
+            isFullScreen: false
+        }
+    };
+
+    // --- Core Functions ---
+
+    function startNewGame() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        initGame();
+    }
+
+    function continueGame() {
+        const saved = localStorage.getItem('aventura_save');
+        if (saved) {
+            state = JSON.parse(saved);
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            updateUI();
+            generateLevel();
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('aventura_save', JSON.stringify(state));
+        document.getElementById('continue-btn').disabled = false;
+    }
+
+    function showOptionsMenu() {
+        showModal("Opções", "", [
+            { text: "Aumentar Texto", action: () => changeFontSize(2) },
+            { text: "Diminuir Texto", action: () => changeFontSize(-2) },
+            { text: "Alternar FullScreen", action: toggleFullScreen },
+            { text: "Exportar Save", action: exportSave },
+            { text: "Importar Save", action: importSave },
+            { text: "Voltar", action: hideModal }
+        ]);
+    }
+
+    function exportSave() {
+        const dataStr = JSON.stringify(state);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'save_aventura.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        addLog("Save exportado com sucesso!");
+    }
+
+    function importSave() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = readerEvent => {
+                try {
+                    const content = readerEvent.target.result;
+                    state = JSON.parse(content);
+                    saveGame();
+                    alert("Save importado com sucesso! O jogo irá recarregar.");
+                    location.reload();
+                } catch (err) {
+                    alert("Erro ao importar o arquivo!");
+                }
+            }
+            reader.readAsText(file);
+        }
+        input.click();
+    }
+
+    function changeFontSize(delta) {
+        state.options.fontSize = Math.min(24, Math.max(12, state.options.fontSize + delta));
+        document.documentElement.style.setProperty('--base-font-size', state.options.fontSize + 'px');
+        saveGame();
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(e => {
+                alert(`Erro ao tentar entrar em modo tela cheia: ${e.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    function startInitialSelection() {
+        state.team = [];
+        state.selectedIniciais = [];
+        showModal("Escolha seus 3 Iniciais", "Selecione as criaturas que começarão sua jornada:", []);
+        
+        const footer = document.getElementById('modal-footer');
+        footer.innerHTML = '';
+        
+        CREATURE_POOL.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'creature-card tooltip';
+            card.innerHTML = `
+                ${getCreatureDisplay(c, 'creature-img')}<br><strong>${c.name}</strong><br>HP: ${c.hp}
+                <span class="tooltiptext">${getCreatureTooltip({...c, level: 1, currentHp: c.hp})}</span>
+            `;
+            card.onclick = () => {
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
+                    state.selectedIniciais = state.selectedIniciais.filter(i => i.id !== c.id);
+                } else if (state.selectedIniciais.length < 3) {
+                    card.classList.add('selected');
+                    state.selectedIniciais.push({...c});
+                }
+                updateSelectionButton();
+            };
+            footer.appendChild(card);
+        });
+
+        const actions = document.getElementById('modal-actions');
+        actions.innerHTML = '<button id="confirm-iniciais" disabled>Confirmar (0/3)</button>';
+        document.getElementById('confirm-iniciais').onclick = () => {
+            state.team = state.selectedIniciais.map(c => initCreature(c));
+            hideModal();
+            initGame(true);
+        };
+    }
+
+    function updateSelectionButton() {
+        const btn = document.getElementById('confirm-iniciais');
+        btn.innerText = `Confirmar (${state.selectedIniciais.length}/3)`;
+        btn.disabled = state.selectedIniciais.length !== 3;
+    }
+
+    function initCreature(base) {
+        return {
+            ...JSON.parse(JSON.stringify(base)),
+            level: 1,
+            xp: 0,
+            maxXp: 100,
+            currentHp: base.hp,
+            isEvolved: false
+        };
+    }
+
+    function initGame(alreadySelected = false) {
+        if (!alreadySelected) {
+            startInitialSelection();
+            return;
+        }
+        state.level = 1;
+        state.cardsRevealed = 0;
+        state.isBossBattle = false;
+        state.diamantes = 50; // Começa com um pouco de diamantes
+        updateUI();
+        generateLevel();
+        saveGame();
+    }
+
+    function updateUI() {
+        document.getElementById('current-level').innerText = state.level;
+        document.getElementById('creature-count').innerText = state.team.length;
+        document.getElementById('player-diamantes').innerText = state.diamantes;
+        
+        // Atualiza diamante no modal se estiver visível
+        const diamondVal = document.getElementById('modal-diamonds-val');
+        if (diamondVal) diamondVal.innerText = state.diamantes;
+
+        const footer = document.getElementById('team-footer');
+        footer.innerHTML = '';
+        state.team.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'team-member tooltip';
+            const hpPercent = (c.currentHp / c.hp) * 100;
+            const xpPercent = (c.xp / c.maxXp) * 100;
+            
+            div.innerHTML = `
+                ${getCreatureDisplay(c, 'team-img')}
+                <div class="mini-bars">
+                    <div class="mini-bar"><div class="mini-bar-fill-hp" style="width: ${hpPercent}%"></div></div>
+                    <div class="mini-bar"><div class="mini-bar-fill-xp" style="width: ${xpPercent}%"></div></div>
+                </div>
+                <span class="tooltiptext">${getCreatureTooltip(c)}</span>
+            `;
+            footer.appendChild(div);
+        });
+
+        if (state.team.length > 0 && state.team.filter(c => c.currentHp > 0).length === 0) {
+            gameOver();
+        }
+        saveGame();
+    }
+
+    function generateLevel() {
+        state.cardsRevealed = 0;
+        saveGame();
+        const grid = document.getElementById('exploration-grid');
+        grid.innerHTML = '';
+        grid.classList.remove('hidden');
+        document.getElementById('battle-screen').style.display = 'none';
+
+        if (state.level % 10 === 0) {
+            startBossBattle();
+            return;
+        }
+
+        for (let i = 0; i < 6; i++) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="card-face card-back">❓</div><div class="card-face card-front"></div>`;
+            
+            const rand = Math.random();
+            let type = rand < 0.4 ? 'COMBAT' : (rand < 0.7 ? 'ENCOUNTER' : 'TREASURE');
+            
+            card.dataset.type = type;
+            card.onclick = () => revealCard(card);
+            grid.appendChild(card);
+        }
+    }
+
+    function revealCard(cardElement) {
+        if (cardElement.classList.contains('revealed')) return;
+        cardElement.classList.add('revealed');
+        state.cardsRevealed++;
+        
+        const type = cardElement.dataset.type;
+        const front = cardElement.querySelector('.card-front');
+        
+        setTimeout(() => {
+            if (type === 'COMBAT') {
+                front.innerHTML = "⚔️<br>COMBATE!"; front.style.color = "red";
+                const enemyCount = state.level > 10 ? Math.min(3, 1 + Math.floor(Math.random() * 3)) : 1;
+                const enemies = [];
+                for (let i = 0; i < enemyCount; i++) enemies.push(getRandomEnemy());
+                setTimeout(() => startBattle(enemies), 600);
+            } else if (type === 'ENCOUNTER') {
+                front.innerHTML = "👣<br>ENCONTRO"; front.style.color = "blue";
+                setTimeout(() => startEncounter(getRandomEnemy()), 600);
+            } else {
+                front.innerHTML = "🍀💀<br>TESOURO"; front.style.color = "green";
+                setTimeout(() => handleTreasure(), 600);
+            }
+        }, 300);
+    }
+
+    function getRandomEnemy() {
+        const base = CREATURE_POOL[Math.floor(Math.random() * CREATURE_POOL.length)];
+        const enemy = initCreature(base);
+        // Scale enemy to player level roughly
+        const levelBoost = Math.floor(state.level / 2);
+        enemy.level += levelBoost;
+        enemy.hp += levelBoost * 20;
+        enemy.currentHp = enemy.hp;
+        enemy.attacks.forEach(a => { a.min += levelBoost * 2; a.max += levelBoost * 3; });
+        return enemy;
+    }
+
+    // --- Battle & XP Logic ---
+
+    function startBattle(enemyOrEnemies, isBoss = false) {
+        state.enemies = Array.isArray(enemyOrEnemies) ? enemyOrEnemies : [enemyOrEnemies];
+        state.isBossBattle = isBoss;
+        showCreatureSelection((selected) => {
+            state.activePlayerCreature = selected;
+            document.getElementById('exploration-grid').classList.add('hidden');
+            document.getElementById('battle-screen').style.display = 'flex';
+            setupBattleUI();
+            addLog(`Batalha: ${selected.name} vs ${state.enemies.map(e => e.name).join(', ')}!`);
+        });
+    }
+
+    function setupBattleUI() {
+        const p = state.activePlayerCreature;
+
+        const playerFighter = document.getElementById('player-fighter');
+        playerFighter.querySelector('.fighter-emoji').innerHTML = getCreatureDisplay(p);
+        playerFighter.classList.add('tooltip');
+        // Remove tooltip anterior se existir
+        const oldTooltipP = playerFighter.querySelector('.tooltiptext');
+        if (oldTooltipP) oldTooltipP.remove();
+        
+        const tooltipP = document.createElement('span');
+        tooltipP.className = 'tooltiptext';
+        tooltipP.innerHTML = getCreatureTooltip(p);
+        playerFighter.appendChild(tooltipP);
+
+        document.getElementById('player-name').innerText = p.name;
+        updateHpUI('player', p);
+        updateXpUI(p);
+
+        const enemiesContainer = document.getElementById('enemies-container');
+        enemiesContainer.innerHTML = '';
+
+        state.enemies.forEach((e, index) => {
+            const enemyDiv = document.createElement('div');
+            enemyDiv.className = 'fighter enemy-fighter tooltip';
+            enemyDiv.id = `enemy-fighter-${index}`;
+            if (e.currentHp <= 0) enemyDiv.style.opacity = '0.3';
+            
+            enemyDiv.innerHTML = `
+                <span class="fighter-emoji" style="font-size: 3rem; height: 80px;">${getCreatureDisplay(e)}</span>
+                <div class="hp-bar-container enemy-hp-container"><div id="enemy-${index}-hp-bar" class="hp-bar-fill"></div></div>
+                <div id="enemy-${index}-hp-text" style="font-size: 0.7rem;">${Math.floor(e.currentHp)}/${e.hp}</div>
+                <strong style="font-size: 0.8rem;">${e.name}</strong>
+                <span class="tooltiptext">${getCreatureTooltip(e)}</span>
+            `;
+            
+            if (e.currentHp > 0) {
+                enemyDiv.style.cursor = 'crosshair';
+                enemyDiv.title = "Clique para atacar este inimigo";
+            }
+            
+            enemiesContainer.appendChild(enemyDiv);
+            updateHpUI(`enemy-${index}`, e);
+        });
+
+        const actions = document.getElementById('battle-actions');
+        actions.innerHTML = '';
+        p.attacks.forEach(atk => {
+            const btn = document.createElement('button');
+            btn.innerText = `${atk.name} (${atk.min}-${atk.max})`;
+            btn.onclick = () => {
+                if (state.enemies.length === 1) {
+                    playerAttack(atk, 0);
+                } else {
+                    addLog(`Escolha o alvo para ${atk.name}!`);
+                    const aliveEnemies = state.enemies.map((e, i) => e.currentHp > 0 ? i : -1).filter(i => i !== -1);
+                    aliveEnemies.forEach(i => {
+                        const enemyEl = document.getElementById(`enemy-fighter-${i}`);
+                        enemyEl.style.boxShadow = "0 0 15px red";
+                        enemyEl.onclick = () => {
+                            // Limpa destaques
+                            aliveEnemies.forEach(idx => {
+                                const el = document.getElementById(`enemy-fighter-${idx}`);
+                                el.style.boxShadow = "";
+                                el.onclick = null;
+                            });
+                            playerAttack(atk, i);
+                        };
+                    });
+                }
+            };
+            actions.appendChild(btn);
+        });
+        document.getElementById('battle-logs').innerHTML = '';
+    }
+
+    function updateHpUI(who, creature) {
+        const percent = (creature.currentHp / creature.hp) * 100;
+        const bar = document.getElementById(`${who}-hp-bar`);
+        const text = document.getElementById(`${who}-hp-text`);
+        if (bar) bar.style.width = percent + '%';
+        if (text) text.innerText = `${Math.max(0, Math.floor(creature.currentHp))}/${creature.hp}`;
+    }
+
+    function updateXpUI(creature) {
+        const percent = (creature.xp / creature.maxXp) * 100;
+        const bar = document.getElementById('player-xp-bar');
+        const text = document.getElementById('player-xp-text');
+        if (bar) bar.style.width = percent + '%';
+        if (text) text.innerText = `Lvl ${creature.level} - ${creature.xp}/${creature.maxXp} XP`;
+    }
+
+    function playerAttack(atk, enemyIndex) {
+        const target = state.enemies[enemyIndex];
+        const dmg = Math.floor(Math.random() * (atk.max - atk.min + 1)) + atk.min;
+        target.currentHp -= dmg;
+        addLog(`${state.activePlayerCreature.name} usou ${atk.name} em ${target.name}: ${dmg} dano!`);
+        updateHpUI(`enemy-${enemyIndex}`, target);
+        
+        // Atualiza tooltip do inimigo (HP mudou)
+        const enemyEl = document.getElementById(`enemy-fighter-${enemyIndex}`);
+        const enemyTooltip = enemyEl.querySelector('.tooltiptext');
+        if (enemyTooltip) enemyTooltip.innerHTML = getCreatureTooltip(target);
+
+        if (target.currentHp <= 0) {
+            addLog(`${target.name} foi derrotado!`);
+            enemyEl.style.opacity = '0.3';
+        }
+
+        toggleButtons(true);
+
+        const allDead = state.enemies.every(e => e.currentHp <= 0);
+        if (allDead) setTimeout(winBattle, 1000);
+        else setTimeout(enemyTurn, 1000);
+    }
+
+    function enemyTurn() {
+        const aliveEnemies = state.enemies.filter(e => e.currentHp > 0);
+        if (aliveEnemies.length === 0) { winBattle(); return; }
+        
+        // Cada inimigo vivo ataca uma vez
+        let currentAttackerIndex = 0;
+        
+        function nextEnemyAttack() {
+            if (currentAttackerIndex >= aliveEnemies.length) {
+                if (state.activePlayerCreature.currentHp > 0) toggleButtons(false);
+                return;
+            }
+            
+            const enemy = aliveEnemies[currentAttackerIndex];
+            const atk = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
+            const dmg = Math.floor(Math.random() * (atk.max - atk.min + 1)) + atk.min;
+            
+            state.activePlayerCreature.currentHp -= dmg;
+            addLog(`${enemy.name} usou ${atk.name}: ${dmg} dano!`);
+            updateHpUI('player', state.activePlayerCreature);
+            
+            // Atualiza tooltip do jogador
+            const playerTooltip = document.querySelector('#player-fighter .tooltiptext');
+            if (playerTooltip) playerTooltip.innerHTML = getCreatureTooltip(state.activePlayerCreature);
+
+            if (state.activePlayerCreature.currentHp <= 0) {
+                setTimeout(loseBattle, 1000);
+            } else {
+                currentAttackerIndex++;
+                setTimeout(nextEnemyAttack, 800);
+            }
+        }
+        
+        nextEnemyAttack();
+    }
+
+    function winBattle() {
+        const p = state.activePlayerCreature;
+        let totalXp = 0;
+        let totalDiamantes = 0;
+        
+        state.enemies.forEach(e => {
+            totalXp += state.isBossBattle ? 500 : 40 + (e.level * 10);
+            totalDiamantes += state.isBossBattle ? 200 : 20 + (e.level * 5);
+        });
+
+        state.diamantes += totalDiamantes;
+        addLog(`Vitória! +${totalXp} XP | +${totalDiamantes} 💎`);
+        gainXp(p, totalXp);
+
+        if (state.isBossBattle) { setTimeout(showBossVictory, 1500); return; }
+
+        // Se houver múltiplos inimigos, oferece capturar um aleatório ou o último derrotado
+        const lastEnemy = state.enemies[state.enemies.length - 1];
+
+        showModal("Vitória!", `Você venceu o combate.`, [
+            { text: "Capturar", action: () => captureCreature(lastEnemy) },
+            { text: "Trocar", action: () => swapCreature(lastEnemy) },
+            { text: "Deixar ir", action: endEvent }
+        ]);
+    }
+
+    function gainXp(creature, amount) {
+        creature.xp += amount;
+        while (creature.xp >= creature.maxXp) {
+            creature.xp -= creature.maxXp;
+            levelUp(creature);
+        }
+        updateUI();
+    }
+
+    function levelUp(c) {
+        c.level++;
+        c.maxXp = Math.floor(c.maxXp * 1.2);
+        c.hp += 20;
+        c.currentHp = c.hp;
+        c.attacks.forEach(a => { a.min += 2; a.max += 4; });
+        addLog(`LEVEL UP! ${c.name} atingiu nível ${c.level}!`);
+        
+        if (!c.isEvolved && c.evo && c.level >= c.evo.level) {
+            evolve(c);
+        }
+    }
+
+    function evolve(c) {
+        addLog(`EVOLUÇÃO! ${c.name} evoluiu para ${c.evo.name}!`);
+        c.name = c.evo.name;
+        c.emoji = c.evo.emoji;
+        if (c.evo.image) c.image = c.evo.image;
+        c.hp += c.evo.hpBoost;
+        c.currentHp = c.hp;
+        c.attacks.forEach(a => { a.min += c.evo.dmgBoost; a.max += c.evo.dmgBoost; });
+        c.isEvolved = true;
+    }
+
+    function loseBattle() {
+        addLog(`${state.activePlayerCreature.name} caiu!`);
+        if (state.isBossBattle) {
+            const alive = state.team.filter(c => c.currentHp > 0);
+            if (alive.length > 0) {
+                addLog("Escolha outro!");
+                showCreatureSelection((s) => { state.activePlayerCreature = s; setupBattleUI(); toggleButtons(false); });
+            } else gameOverBoss();
+            return;
+        }
+        state.team.splice(state.team.indexOf(state.activePlayerCreature), 1);
+        updateUI();
+        showModal("Derrota", `Você perdeu ${state.activePlayerCreature.name}...`, [{ text: "Continuar", action: endEvent }]);
+    }
+
+    // --- Events ---
+
+    function startEncounter(enemy) {
+        showModal("Encontro", `Um ${enemy.emoji} ${enemy.name} nível ${enemy.level} apareceu!`, [
+            { text: "Capturar", action: () => tryCapture(enemy) },
+            { text: "Lutar", action: () => startBattle(enemy) },
+            { text: "Fugir", action: endEvent }
+        ]);
+    }
+
+    function tryCapture(enemy) {
+        if (Math.random() > 0.5) {
+            showModal("Sucesso!", `Capturou ${enemy.name}!`, [{ text: "Ok", action: () => captureCreature(enemy) }]);
+        } else {
+            showModal("Falhou!", "Ele atacou!", [{ text: "Lutar", action: () => startBattle(enemy) }]);
+        }
+    }
+
+    function showBossVictory() {
+        const capturedBoss = JSON.parse(JSON.stringify(BOSS));
+        capturedBoss.hp = Math.floor(capturedBoss.hp * 0.3);
+        capturedBoss.attacks.forEach(a => {
+            a.min = Math.floor(a.min * 0.3);
+            a.max = Math.floor(a.max * 0.3);
+        });
+        capturedBoss.name = "Mini " + capturedBoss.name;
+
+        showModal("VITÓRIA!", `Você derrotou o Chefe! Deseja capturá-lo com 30% do poder?`, [
+            { text: "Sim, Capturar!", action: () => { 
+                captureCreature(capturedBoss, true); // true indica que é captura de boss
+            } },
+            { text: "Não, Apenas Continuar", action: continueAfterBoss }
+        ]);
+    }
+
+    function captureCreature(c, isBoss = false) {
+        c.currentHp = c.hp; // Vida cheia ao capturar
+        
+        const nextAction = isBoss ? continueAfterBoss : endEvent;
+
+        // Verifica se já tem uma criatura igual para fusão
+        const duplicate = state.team.find(t => t.id === c.id);
+        if (duplicate) {
+            showModal("Criatura Repetida!", `Você já tem um ${c.name}. O que deseja fazer?`, [
+                { text: "Fundir (Power Up!)", action: () => { fuseCreatures(duplicate, c); nextAction(); } },
+                { text: "Manter Ambos", action: () => addToTeam(c, isBoss) }
+            ]);
+        } else {
+            addToTeam(c, isBoss);
+        }
+    }
+
+    function addToTeam(c, isBoss = false) {
+        const nextAction = isBoss ? continueAfterBoss : endEvent;
+        if (state.team.length < state.maxTeamSize) { 
+            state.team.push(c); 
+            healTeamOnCapture();
+            nextAction(); 
+        }
+        else {
+            showModal("Time Cheio", "Trocar uma?", [
+                { text: "Trocar", action: () => swapCreature(c, isBoss) }, 
+                { text: "Deixar ir", action: nextAction }
+            ]);
+        }
+    }
+
+    function swapCreature(newC, isBoss = false) {
+        const nextAction = isBoss ? continueAfterBoss : endEvent;
+        showCreatureSelection((s) => { 
+            state.team[state.team.indexOf(s)] = newC; 
+            nextAction(); 
+        }, "Remover qual?");
+    }
+
+    function fuseCreatures(existing, newC) {
+        existing.level += 1;
+        existing.hp += 30;
+        existing.currentHp = existing.hp;
+        existing.attacks.forEach(a => { a.min += 5; a.max += 8; });
+        
+        if (newC.level > 1) {
+            existing.xp += 50;
+            if (existing.xp >= existing.maxXp) gainXp(existing, 0);
+        }
+        
+        addLog(`FUSÃO! ${existing.name} ficou mais forte!`);
+        healTeamOnCapture();
+    }
+
+    function healTeamOnCapture() {
+        state.team.forEach(creature => {
+            const healAmount = creature.hp * 0.25;
+            creature.currentHp = Math.min(creature.hp, creature.currentHp + healAmount);
+        });
+        addLog("Sua equipe recuperou um pouco de vida!");
+    }
+
+    function handleTreasure() {
+        showModal("Baú de Tesouro", "Você encontrou um baú misterioso🍀💀! Deseja abri-lo? (Pode conter recompensas ou armadilhas!)", [
+            { text: "Abrir Baú", action: openTreasure },
+            { text: "Deixar para lá", action: endEvent }
+        ]);
+    }
+
+    function openTreasure() {
+        const r = Math.random();
+        if (r < 0.3) {
+            const c = getRandomEnemy();
+            showModal("Ovo!", `Ganhou um ${c.name}!`, [{ text: "Chocar", action: () => captureCreature(c) }]);
+        } else if (r < 0.6) {
+            const g = 50 + (state.level * 10);
+            state.diamantes += g;
+            showModal("Diamante!", `Encontrou um baú com ${g} 💎!`, [{ text: "Pegar", action: endEvent }]);
+        } else if (r < 0.8) {
+            state.team.forEach(c => { 
+                c.hp += 10; c.currentHp = c.hp; 
+                c.attacks.forEach(a => { a.min += 2; a.max += 2; });
+            });
+            showModal("Bênção", "Time fortalecido!", [{ text: "Legal!", action: endEvent }]);
+        } else {
+            if (state.team.length > 1) {
+                showModal("Armadilha!", "O baú era uma armadilha! Uma de suas criaturas fugiu assustada. Escolha qual perder:", []);
+                const f = document.getElementById('modal-footer');
+                f.innerHTML = '';
+                state.team.forEach(c => {
+                    const d = document.createElement('div');
+                    d.className = 'creature-card tooltip';
+                    d.innerHTML = `
+                        ${getCreatureDisplay(c, 'creature-img')}<br>${c.name}
+                        <span class="tooltiptext">${getCreatureTooltip(c)}</span>
+                    `;
+                    d.onclick = () => {
+                        state.team.splice(state.team.indexOf(c), 1);
+                        addLog(`${c.name} fugiu da armadilha!`);
+                        endEvent();
+                    };
+                    f.appendChild(d);
+                });
+            } else showModal("Vazio", "O baú estava vazio...", [{ text: "Ok", action: endEvent }]);
+        }
+    }
+
+    function endEvent() {
+        hideModal();
+        saveGame();
+        document.getElementById('battle-screen').style.display = 'none';
+        document.getElementById('exploration-grid').classList.remove('hidden');
+        updateUI();
+        if (state.cardsRevealed >= 6) { 
+            if (state.level < 50) {
+                setTimeout(showShop, 500);
+            } else {
+                // Se já estiver no 50 (fim do jogo), não faz nada especial aqui
+            }
+        }
+    }
+
+    function showShop() {
+        const shopTitle = `Loja do Nível ${state.level}`;
+        const shopBody = "Bem-vindo! Use seus diamantes para fortalecer sua equipe.";
+        
+        showModal(shopTitle, shopBody, [
+            { text: "Próximo Nível", action: () => { 
+                hideModal(); 
+                state.level++; 
+                generateLevel(); 
+            } }
+        ], true);
+
+        const f = document.getElementById('modal-footer');
+        f.innerHTML = '';
+
+        const healCost = 40 + (state.level * 10);
+        createShopItem("Poção Grupal", "Cura 50% de HP de todos.", healCost, "🧪", () => {
+            state.team.forEach(c => c.currentHp = Math.min(c.hp, c.currentHp + (c.hp * 0.5)));
+            addLog("Equipe curada pela poção!");
+            updateUI();
+        });
+
+        const atkCost = 60 + (state.level * 15);
+        createShopItem("Treino Força", "+5 Dano (Min/Max) p/ um", atkCost, "⚔️", () => {
+            showCreatureSelection((c) => {
+                c.attacks.forEach(a => { a.min += 5; a.max += 5; });
+                state.diamantes -= atkCost;
+                addLog(`${c.name} aumentou seu dano!`);
+                updateUI();
+                showShop();
+            }, "Escolha quem treinar:");
+            return false;
+        });
+
+        const hpCost = 50 + (state.level * 10);
+        createShopItem("Vitaminas", "+40 HP Máximo p/ um", hpCost, "💊", () => {
+            showCreatureSelection((c) => {
+                c.hp += 40;
+                c.currentHp += 40;
+                state.diamantes -= hpCost;
+                addLog(`${c.name} aumentou sua vida!`);
+                updateUI();
+                showShop();
+            }, "Escolha quem fortalecer:");
+            return false;
+        });
+    }
+
+    function createShopItem(name, desc, cost, emoji, action) {
+        const f = document.getElementById('modal-footer');
+        const d = document.createElement('div');
+        d.className = 'creature-card';
+        if (state.diamantes < cost) d.style.opacity = '0.5';
+        
+        d.innerHTML = `
+            <span style="font-size: 2rem;">${emoji}</span><br>
+            <strong>${name}</strong><br>
+            <small>${desc}</small><br>
+            <strong>${cost} 💎</strong>
+        `;
+        
+        d.onclick = () => {
+            if (state.diamantes >= cost) {
+                const close = action();
+                if (close !== false) {
+                    state.diamantes -= cost;
+                    updateUI();
+                    showShop();
+                }
+            } else {
+                alert("Diamantes insuficiente!");
+            }
+        };
+        f.appendChild(d);
+    }
+
+    function startBossBattle() {
+        document.getElementById('exploration-grid').classList.add('hidden');
+        const multiplier = 1 + (Math.floor(state.level / 10) - 1) * 0.5;
+        const currentBoss = JSON.parse(JSON.stringify(BOSS));
+        currentBoss.hp = Math.floor(currentBoss.hp * multiplier);
+        currentBoss.attacks.forEach(a => {
+            a.min = Math.floor(a.min * multiplier);
+            a.max = Math.floor(a.max * multiplier);
+        });
+        
+        showModal(`CHEFE DO NÍVEL ${state.level}`, currentBoss.name, [{ text: "LUTAR", action: () => startBattle(initCreature(currentBoss), true) }]);
+    }
+
+    function gameOver() { showModal("FIM", "Perdeu tudo.", [{ text: "Reiniciar", action: () => { location.reload(); } }]); }
+
+    function gameOverBoss() {
+        showModal("DERROTA", "O Rei venceu. Escolha um para renascer:", []);
+        const f = document.getElementById('modal-footer');
+        f.innerHTML = '';
+        state.team.forEach(c => {
+            const d = document.createElement('div'); d.className = 'creature-card';
+            d.innerHTML = `${getCreatureDisplay(c, 'creature-img')}<br>${c.name}`;
+            d.onclick = () => {
+                const t = [initCreature(CREATURE_POOL[0]), initCreature(CREATURE_POOL[1]), c];
+                c.currentHp = c.hp;
+                state.team = t;
+                state.level = Math.max(1, state.level - 9);
+                hideModal(); initGame(true);
+            };
+            f.appendChild(d);
+        });
+    }
+
+    function continueAfterBoss() {
+        if (state.level >= 50) {
+            showModal("GRANDE VITÓRIA!", "Você completou todos os 50 níveis e dominou o mundo das criaturas!", [
+                { text: "Jogar Novamente", action: () => location.reload() }
+            ]);
+            return;
+        }
+
+        showModal("Progresso", `Nível ${state.level} concluído! Prepare-se para o próximo desafio.`, [
+            { text: "Continuar", action: () => {
+                state.level++;
+                generateLevel();
+                hideModal();
+            }}
+        ]);
+    }
+
+    // --- UI Utils ---
+    function getCreatureDisplay(c, className = "") {
+        if (c.image) {
+            return `<img src="imagens/${c.image}" alt="${c.name}" class="${className}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span style="display:none;">${c.emoji}</span>`;
+        }
+        return `<span>${c.emoji}</span>`;
+    }
+
+    function getCreatureTooltip(c) {
+        let attacksInfo = c.attacks.map(a => `• ${a.name}: ${a.min}-${a.max}`).join('\n');
+        return `
+            <strong>${c.name} (Lvl ${c.level})</strong>
+            HP: ${Math.floor(c.currentHp)}/${c.hp}
+            ${c.xp !== undefined ? `XP: ${c.xp}/${c.maxXp}\n` : ''}--- Ataques ---
+            ${attacksInfo}
+        `;
+    }
+
+    function showModal(t, b, btns, showDiamonds = false) {
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('modal-title').innerText = t;
+        document.getElementById('modal-body').innerText = b;
+        document.getElementById('modal-actions').innerHTML = '';
+        const f = document.getElementById('modal-footer'); f.innerHTML = '';
+        
+        const diamondHud = document.getElementById('modal-diamonds-hud');
+        if (showDiamonds) {
+            diamondHud.classList.remove('hidden');
+            document.getElementById('modal-diamonds-val').innerText = state.diamantes;
+        } else {
+            diamondHud.classList.add('hidden');
+        }
+
+        btns.forEach(btn => {
+            const el = document.createElement('button'); el.innerText = btn.text; el.onclick = btn.action;
+            document.getElementById('modal-actions').appendChild(el);
+        });
+    }
+
+    function hideModal() { document.getElementById('overlay').style.display = 'none'; }
+
+    function showCreatureSelection(cb, t = "Escolha:") {
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('modal-title').innerText = t;
+        document.getElementById('modal-body').innerText = "";
+        document.getElementById('modal-actions').innerHTML = '';
+        const f = document.getElementById('modal-footer'); f.innerHTML = '';
+        
+        // Esconde HUD de diamantes se estiver vindo da loja para seleção
+        document.getElementById('modal-diamonds-hud').classList.add('hidden');
+
+        state.team.forEach(c => {
+            const d = document.createElement('div'); 
+            d.className = 'creature-card tooltip' + (c.currentHp <= 0 ? ' dead' : '');
+            d.innerHTML = `
+                ${getCreatureDisplay(c, 'creature-img')}<br>${c.name}<br>Lvl ${c.level}
+                <span class="tooltiptext">${getCreatureTooltip(c)}</span>
+            `;
+            if (c.currentHp > 0) d.onclick = () => { hideModal(); cb(c); };
+            f.appendChild(d);
+        });
+    }
+
+    function addLog(m) {
+        const l = document.getElementById('battle-logs');
+        const d = document.createElement('div'); d.innerText = m;
+        l.appendChild(d); l.scrollTop = l.scrollHeight;
+    }
+
+    function toggleButtons(d) { document.querySelectorAll('#battle-actions button').forEach(b => b.disabled = d); }
+
+    // Ao carregar a página
+    window.onload = () => {
+        const saved = localStorage.getItem('aventura_save');
+        if (saved) {
+            document.getElementById('continue-btn').disabled = false;
+        }
+    };
+</script>
+</body>
+</html>
