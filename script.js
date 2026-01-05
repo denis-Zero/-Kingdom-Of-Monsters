@@ -220,7 +220,7 @@
   }
 },
 
-{ id: 'azul eterno', clan: 'sagrados', name: "Azul Eterno", emoji: "💙", image: "Azul Eterno.png", hp: 160,
+{ id: 'azul_eterno', clan: 'sagrados', name: "Azul Eterno", emoji: "💙", image: "Azul Eterno.png", hp: 160,
   attacks: [
     { name: "Corte Iluminado", min: 28, max: 48 },
     { name: "Retaliação Eterna", min: 38, max: 68, recoil: 0.25 }
