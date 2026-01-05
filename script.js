@@ -220,6 +220,15 @@
   }
 },
 
+{ id: 'azul eterno', clan: 'sagrados', name: "Azul Eterno", emoji: "💙", image: "Azul Eterno.png", hp: 160,
+  attacks: [
+    { name: "Corte Iluminado", min: 28, max: 48 },
+    { name: "Retaliação Eterna", min: 38, max: 68, recoil: 0.25 }
+  ],
+  supportSkill: { name: "Relâmpago Azul", desc: "Concede +60% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.30, turns: 1, cooldown: 5},
+  evo: { level: 12, name: "Paladino do Trono Azul", emoji: "🌀", image: "Paladino do Trono Azul.png", hpBoost: 100, dmgBoost: 80 }
+},     
+
 // 🌙 SOMBRAS
 { id: 'goblin', clan: 'sombras', name: "Goblin", emoji: "🧌", image: "goblin.png", hp: 100,
   attacks: [
