@@ -220,12 +220,12 @@
   }
 },
 
-{ id: 'azul_eterno', clan: 'sagrados', name: "Azul Eterno", emoji: "💙", image: "Azul Eterno.png", hp: 160,
+{ id: 'azul_eterno', clan: 'sagrados', name: "Azul Eterno", emoji: "💙", image: "Azul Eterno.png", hp: 198,
   attacks: [
     { name: "Corte Iluminado", min: 28, max: 48 },
-    { name: "Retaliação Eterna", min: 38, max: 68, recoil: 0.25 }
+    { name: "Retaliação Eterna", min: 28, max: 78, recoil: 0.3 }
   ],
-  supportSkill: { name: "Relâmpago Azul", desc: "Concede +60% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.30, turns: 1, cooldown: 5},
+  supportSkill: { name: "Relâmpago Azul", desc: "Concede +60% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.60, turns: 1, cooldown: 5},
   evo: { level: 12, name: "Paladino do Trono Azul", emoji: "🌀", image: "Paladino do Trono Azul.png", hpBoost: 100, dmgBoost: 80 }
 },     
 
@@ -259,7 +259,7 @@
     { name: "Toque Etéreo", min: 18, max: 28 },
     { name: "Assombração", min: 28, max: 38, recoil: 0.25 }
   ],
-  supportSkill: { name: "Velo das Sombras", desc: "Concede +30% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.30, turns: 1, cooldown: 4 },
+  supportSkill: { name: "Velo das Sombras", desc: "Concede +30% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.30, turns: 1, cooldown: 2 },
   evo: { level: 7, name: "Espectro Ancião", emoji: "☠️", image: "espectro_anciao.png", hpBoost: 45, dmgBoost: 60 }
 },
 
