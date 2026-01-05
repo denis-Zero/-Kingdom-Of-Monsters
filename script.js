@@ -226,7 +226,7 @@
     { name: "Retaliação Eterna", min: 28, max: 78, recoil: 0.3 }
   ],
   supportSkill: { name: "Relâmpago Azul", desc: "Concede +60% de Esquiva para o aliado no próximo turno.", effect: "dodge_buff", value: 0.60, turns: 1, cooldown: 5},
-  evo: { level: 12, name: "Paladino do Trono Azul", emoji: "🌀", image: "Paladino do Trono Azul.png", hpBoost: 100, dmgBoost: 80 }
+  evo: { level: 12, name: "Paladino do Trono Azul", emoji: "🌀", image: "Paladino do Azul.png", hpBoost: 100, dmgBoost: 40 }
 },     
 
 // 🌙 SOMBRAS
