@@ -34,10 +34,10 @@ function addLog(m) {
     }
 }
 
-function applyTCGBonus(c) {
+function applyTCG(c) {
     if (!c || c.type === 'item') return c;
     
-    const bonus = 1.8;
+    const  = 1.8;
     const evoBonus = c.type === 'evo' ? 1.4 : 1.0;
     const multiplier = bonus * evoBonus;
     const newCard = { ...c };
@@ -51,7 +51,7 @@ function applyTCGBonus(c) {
     }
     if (!baseHp) baseHp = 100;
 
-    newCard.hp = Math.floor(baseHp * multiplier);
+    newCard.hp = Math.floor(baseHp * 80);
     newCard.currentHp = newCard.hp;
     
     if (newCard.attacks) {
@@ -440,11 +440,11 @@ function enemyTCGTurn() {
                     const card = tcgState.enemyHand[i];
                     if (card.type === 'basic') {
                         if (!tcgState.enemyActive) {
-                            tcgState.enemyActive = applyTCGBonus(card);
+                            tcgState.enemyActive = applyTCG(card);
                             tcgState.enemyHand.splice(i, 1);
                             addLog(`👾 TCG: Inimigo enviou ${card.name} para o Ativo!`);
                         } else if (tcgState.enemyBench && tcgState.enemyBench.length < 3) {
-                            tcgState.enemyBench.push(applyTCGBonus(card));
+                            tcgState.enemyBench.push(applyTCG(card));
                             tcgState.enemyHand.splice(i, 1);
                             addLog(`👾 TCG: Inimigo colocou ${card.name} no banco.`);
                         }
@@ -466,7 +466,7 @@ function enemyTCGTurn() {
                         }
 
                         if (target) {
-                            const evolved = applyTCGBonus(card);
+                            const evolved = applyTCG(card);
                             const damageTaken = target.hp - target.currentHp;
                             
                             target.name = evolved.name;
@@ -841,10 +841,10 @@ function tcgPlayCard(handIndex) {
     
     if (card.type === 'basic') {
         if (!tcgState.active) {
-            tcgState.active = applyTCGBonus(card);
+            tcgState.active = applyTCG(card);
             tcgState.hand.splice(handIndex, 1);
         } else if (tcgState.bench.length < 3) {
-            tcgState.bench.push(applyTCGBonus(card));
+            tcgState.bench.push(applyTCG(card));
             tcgState.hand.splice(handIndex, 1);
         } else {
             alert("Banco cheio!");
@@ -881,7 +881,7 @@ function tcgPlayCard(handIndex) {
                 </div>
             `;
             d.onclick = () => {
-                const evolved = applyTCGBonus(card);
+                const evolved = applyTCG(card);
                 // Mantém energia e danos (proporcionalmente ou fixo? Vamos manter fixo o dano e somar energia)
                 const damageTaken = target.data.hp - target.data.currentHp;
                 evolved.currentHp = Math.max(10, evolved.hp - damageTaken);
@@ -1051,7 +1051,7 @@ function tcgUseSupportSkill(creature) {
                 }
                 break;
             case 'fixed_dmg_buff':
-                active.nextAttackBonus = (active.nextAttackBonus || 0) + Math.floor(skill.value * 1.8);
+                active.nextAttack = (active.nextAttack || 0) + Math.floor(skill.value * 1.8);
                 addLog(`🔥 TCG: Próximo ataque de ${active.name} terá +${Math.floor(skill.value * 1.8)} de dano!`);
                 break;
             case 'energy_gain':
@@ -1111,13 +1111,13 @@ function tcgAttack(chosenAttack) {
     if (tcgState.active.guaranteedMax) {
         tcgState.active.guaranteedMax = false; // Consome o bônus
     }
-    let bonusDmg = 0;
+    let Dmg = 0;
     
     // Aplica bônus de itens equipados
     if (tcgState.active.items) {
         tcgState.active.items.forEach(item => {
-            if (item.id === 'garra_obsidiana') bonusDmg += Math.floor(15 * 1.8);
-            if (item.id === 'anel_fogo') bonusDmg += Math.floor(25 * 1.8);
+            if (item.id === 'garra_obsidiana') Dmg += Math.floor(15 * 1.8);
+            if (item.id === 'anel_fogo') Dmg += Math.floor(25 * 1.8);
             if (item.id === 'colar_regeneracao') {
                 const heal = Math.floor(tcgState.active.hp * 0.1);
                 tcgState.active.currentHp = Math.min(tcgState.active.hp, tcgState.active.currentHp + heal);
@@ -1127,12 +1127,12 @@ function tcgAttack(chosenAttack) {
     }
 
     // Aplica bônus de Habilidade de Suporte
-    if (tcgState.active.nextAttackBonus) {
-        bonusDmg += tcgState.active.nextAttackBonus;
-        tcgState.active.nextAttackBonus = 0; // Consome o bônus
+    if (tcgState.active.nextAttack) {
+        Dmg += tcgState.active.nextAttack;
+        tcgState.active.nextAttack = 0; // Consome o bônus
     }
 
-    let dmg = baseDmg + bonusDmg;
+    let dmg = baseDmg + Dmg;
 
     // Vantagem de Clã (se houver)
     if (tcgState.active.clan && tcgState.enemyActive.clan && typeof CLANS !== 'undefined') {
