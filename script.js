@@ -182,10 +182,10 @@
   evo: { level: 8, name: "Arcanjo", emoji: "🪽", image: "arcanjo.png", hpBoost: 65, dmgBoost: 75 }
 },
 
-{ id: 'guardiao', clan: 'sagrados', name: "Guardião", emoji: "🛡️", image: "guardiao.png", hp: 16500,
+{ id: 'guardiao', clan: 'sagrados', name: "Guardião", emoji: "🛡️", image: "guardiao.png", hp: 165,
   attacks: [
-    { name: "Golpe Protetor", min: 120, max: 220 },
-    { name: "Muralha Sagrada", min: 240, max: 340, cooldown: 3 }
+    { name: "Golpe Protetor", min: 12, max: 22 },
+    { name: "Muralha Sagrada", min: 24, max: 34, cooldown: 3 }
   ],
   evo: { level: 7, name: "Guardião Eterno", emoji: "🗡️", image: "guardiao_eterno.png", hpBoost: 85, dmgBoost: 40 }
 },
