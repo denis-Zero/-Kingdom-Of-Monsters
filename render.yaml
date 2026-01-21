@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: kingdom-of-monsters
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
