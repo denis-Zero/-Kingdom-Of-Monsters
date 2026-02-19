@@ -141,7 +141,7 @@
     { name: "Asas do Crepúsculo", min: 52, max: 60, cooldown: 1  },
     { name: "Ilusão do Bosque Eterno", min: 75, max: 85, cooldown: 4 }
   ],
-  supportSkill: [
+  supportSkills: [
                 { name: "Sopro Vital", desc: "Cura 45% do HP da criatura ativa instantaneamente.", effect: "heal_percent", value: 0.45, cooldown: 3 }, 
                 { name: "Restalração", desc: "Remove todos os debuffs negativos do aliado.", effect: "cleanse_debuffs", value: 1, cooldown: 2 },
                 { name: "Barreira", desc: "Cria um escudo que absorve 120 de dano por 2 turnos.", effect: "shield_flat", value: 120, turns: 2, cooldown: 3 }
@@ -516,7 +516,7 @@ evo: {
 
     const ITEMS = {
         // Ofensiva
-        'garra_obsidiana': { id: 'garra_obsidiana', name: "Garra de Obsidiana", desc: "+8 de dano fixo em todos os ataques.", cost: 150, type: 'offense', icon: "💎", image: "garra_obsidiana.png" },
+        'garra_obsidiana': { id: 'garra_obsidiana', name: "Garra de Obsidiana", desc: "+50 de dano fixo em todos os ataques.", cost: 150, type: 'offense', icon: "💎", image: "garra_obsidiana.png" },
         'anel_fogo': { id: 'anel_fogo', name: "Anel de Fogo", desc: "Aumenta o dano máximo em 15.", cost: 120, type: 'offense', icon: "🔥", image: "anel_fogo.png" },
         'amolador_presas': { id: 'amolador_presas', name: "Amolador de Presas", desc: "Dano mínimo nunca é inferior a 80.", cost: 100, type: 'offense', icon: "🦴", image: "amolador_presas.png" },
         'cajado_runico': { id: 'cajado_runico', name: "Cajado Rúnico", desc: "+5% de dano para evoluções finais.", cost: 200, type: 'offense', icon: "🪄", image: "cajado_runico.png" },
@@ -3559,7 +3559,7 @@ function toggleMobileMode() {
                     const lvl = item.level || 1;
                     const itemDourado = (msg) => `<span style="color:gold; font-weight:bold;">${item.icon || '📦'} ${msg}</span>`;
                     
-                    if (item.id === 'garra_obsidiana') dmg += (20 * lvl);
+                    if (item.id === 'garra_obsidiana') dmg += (50 * lvl);
                     if (item.id === 'anel_fogo') {
                         if (Math.random() > 0.5) dmg += (15 * lvl); 
                     }
